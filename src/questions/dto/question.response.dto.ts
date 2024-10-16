@@ -22,7 +22,6 @@ export default class QuestionResponseDto {
     newResponse.isChild = question.isChild;
     newResponse.isDeleted = question.isDeleted;
 
-    console.log('await question.user: ', question.user);
     newResponse.user = UsersResponseDto.of(await question.user);
     newResponse.hashTags = (await question.hashTags).map(
       HashTagsResponseDto.of,

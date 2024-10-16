@@ -81,6 +81,10 @@ export default class QuestionsService {
           content: Like(`%${search}%`),
         },
       ],
+      relations: {
+        user: true,
+        hashTags: true,
+      },
       order: {
         createdAt: 'DESC',
       },
@@ -124,6 +128,10 @@ export default class QuestionsService {
     const [questions, count] = await this.questionsRepository.findAndCount({
       where: {
         user: { userId: user.userId },
+      },
+      relations: {
+        user: true,
+        hashTags: true,
       },
       take: pageSize,
       skip: page * pageSize,

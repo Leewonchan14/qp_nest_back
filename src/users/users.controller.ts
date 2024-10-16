@@ -16,7 +16,6 @@ import UsersResponseDto from './dto/users.response.dto';
 import { ExistUserIdPipe } from './pipes/user-exist-validator.pipe';
 import Users from './users.entity';
 import { UsersService } from './users.service';
-// import { ParseIntPipe } from 'src/common/pipes/parse-int.pipe';
 
 @Controller('users')
 export default class UsersController {
@@ -52,7 +51,7 @@ export default class UsersController {
     await this.userService.delete(user);
     return SuccessResponse.of(
       HttpStatus.OK, //
-      undefined,
+      'ok',
     );
   }
 

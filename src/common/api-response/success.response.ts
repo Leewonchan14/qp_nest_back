@@ -1,19 +1,19 @@
+type FALSY = Promise<any> | undefined | null | void;
+
+type NotFALSY<T> = T extends FALSY ? never : T;
+
 export default class SuccessResponse<T> {
   isSuccess: boolean = true;
   message: string = 'ok';
   timestamp: string = new Date().toISOString();
 
   constructor(
-    private status: number,
-    private result: T,
-    private path?: string,
+    private readonly status: number,
+    private readonly result: T,
+    private readonly path?: string,
   ) {}
 
-  static of<D>(
-    status: number,
-    result: Exclude<D, Promise<any>>,
-    path?: string,
-  ): SuccessResponse<D> {
+  static of<D>(status: number, result: NotFALSY<D>, path?: string) {
     return new SuccessResponse(status, result, path);
   }
 }
