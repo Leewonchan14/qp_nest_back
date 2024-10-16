@@ -35,18 +35,16 @@ export class UsersService {
   }
 
   async delete(user: Users) {
-    await this.userRepository.update(user, {
+    await this.userRepository.update(user.userId, {
       isDeleted: true,
     });
-    return;
   }
 
   async updatePoint(user: Users, point: number) {
     const updatedUser = await this.userRepository.update(
       { userId: user.userId },
-      { point },
+      { point: user.point + point },
     );
-    console.log(' updatedUser: ', updatedUser);
     return updatedUser.affected;
   }
 }

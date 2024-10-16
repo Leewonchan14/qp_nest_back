@@ -7,4 +7,4 @@ import Answers from './answers.entity';
   controllers: [],
   providers: [],
 })
-export class UsersModule {}
+export class AnswersModule {}

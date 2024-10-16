@@ -2,7 +2,7 @@ import { Gender } from 'src/common/enum/gender';
 import { Role } from 'src/common/enum/role';
 import Users from '../users.entity';
 
-export default class FindUserResponseDto {
+export default class UsersResponseDto {
   userId: number;
   username: string;
   profileImage: string;
@@ -11,10 +11,9 @@ export default class FindUserResponseDto {
   point: number;
   role: Role;
   isDeleted: boolean;
-  refreshToken: string;
 
-  static of(users: Users) {
-    const newDto = new FindUserResponseDto();
+  static of(users: Users): UsersResponseDto {
+    const newDto = new UsersResponseDto();
     Object.entries(users).forEach(([key, value]) => {
       newDto[key] = value;
     });

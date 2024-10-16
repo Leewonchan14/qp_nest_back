@@ -1,6 +1,19 @@
+import Answers from 'src/answers/answers.entity';
 import TimeStampEntity from 'src/common/entity/timestamp.entity';
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import HashTags from 'src/hashtag/hashtags.entity';
+import Users from 'src/users/users.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
+@Entity()
 export default class Questions extends TimeStampEntity {
   @PrimaryGeneratedColumn('increment')
   questionId: number;
@@ -14,19 +27,20 @@ export default class Questions extends TimeStampEntity {
   @Column({ default: 0 })
   hit: number;
 
-  // @ManyToOne(fetch = FetchType.LAZY)
-  // @JoinColumn(name = "user_id")
-  // private User user;
+  @Column({ default: false })
+  isChild: boolean;
 
-  // @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
-  // @Builder.Default
-  // private List<QuestionHashTag> questionHashTagList = new ArrayList<>();
+  @Column({ default: false })
+  isDeleted: boolean;
 
-  // @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
-  // @Builder.Default
-  // private List<Answer> answers = new ArrayList<>();
+  @ManyToOne(() => Users, (user) => user.questions, { nullable: false })
+  @JoinColumn()
+  user: Promise<Users>;
 
-  // @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
-  // @Builder.Default
-  // private List<UserQuestionAlarm> alarms = new ArrayList<>();
+  @ManyToMany(() => HashTags, (hashTags) => hashTags.questions)
+  @JoinTable()
+  hashTags: Promise<HashTags[]>;
+
+  @OneToMany(() => Answers, (answer) => answer.question)
+  answers: Promise<Answers[]>;
 }

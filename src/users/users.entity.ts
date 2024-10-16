@@ -1,7 +1,16 @@
+import Answers from 'src/answers/answers.entity';
 import TimeStampEntity from 'src/common/entity/timestamp.entity';
 import { Gender } from 'src/common/enum/gender';
 import { Role } from 'src/common/enum/role';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import Questions from 'src/questions/questions.entity';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export default class Users extends TimeStampEntity {
@@ -32,12 +41,13 @@ export default class Users extends TimeStampEntity {
   @Column({ length: 100, nullable: true })
   refreshToken: string;
 
-  // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-  // private List<Question> questionList = new ArrayList<>();
+  @OneToMany(() => Questions, (question) => question.user)
+  questions: Promise<Questions[]>;
 
-  // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-  // private List<Answer> answerList = new ArrayList<>();
+  @OneToMany(() => Answers, (answer) => answer.user)
+  answers: Promise<Answers[]>;
 
-  // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-  // private List<AnswerLikes> answerLikesList = new ArrayList<>();
+  @ManyToMany(() => Answers, (answer) => answer.likeUsers)
+  @JoinTable()
+  likeAnswers: Promise<Answers[]>;
 }

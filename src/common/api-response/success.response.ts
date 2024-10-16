@@ -9,7 +9,11 @@ export default class SuccessResponse<T> {
     private path?: string,
   ) {}
 
-  static of(status: number, result: any, path?: string) {
+  static of<D>(
+    status: number,
+    result: Exclude<D, Promise<any>>,
+    path?: string,
+  ): SuccessResponse<D> {
     return new SuccessResponse(status, result, path);
   }
 }

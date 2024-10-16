@@ -3,23 +3,25 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import FailResponse from 'src/common/api-response/fail.response';
 
-@Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter<HttpException> {
-  catch(exception: HttpException, host: ArgumentsHost) {
+export class HashTagsNotFoundException extends HttpException {
+  constructor(hashTagIds: number[]) {
+    super(`HashTag NotFound by Id in : ${hashTagIds}`, HttpStatus.NOT_FOUND);
+  }
+}
+
+@Catch(HashTagsNotFoundException)
+export class UserNotFoundExceptionFilter
+  implements ExceptionFilter<HashTagsNotFoundException>
+{
+  catch(exception: HashTagsNotFoundException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
     const statusCode = exception.getStatus();
-
-    // response.status(statusCode).json({
-    //   statusCode,
-    //   message: exception.message,
-    //   timestamp: new Date().toISOString(),
-    //   path: request.url,
-    // });
 
     response.status(statusCode).json(
       FailResponse.of(

@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AnswersModule } from './answers/answers.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { HashTasgModule } from './hashtag/hashtags.module';
+import { QuestionsModule } from './questions/questions.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -19,6 +22,9 @@ import { UsersModule } from './users/users.module';
       // autoLoadEntities: true,
     }),
     UsersModule,
+    QuestionsModule,
+    AnswersModule,
+    HashTasgModule,
   ],
   controllers: [AppController],
   providers: [AppService],

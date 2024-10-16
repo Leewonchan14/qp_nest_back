@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import SuccessResponse from 'src/common/api-response/success.response';
 import CreateUsersResponseDto from './dto/create-users.response.dto';
-import FindUserResponseDto from './dto/find-users.response.dto';
+import UsersResponseDto from './dto/users.response.dto';
 import { ExistUserIdPipe } from './pipes/user-exist-validator.pipe';
 import Users from './users.entity';
 import { UsersService } from './users.service';
@@ -41,7 +41,7 @@ export default class UsersController {
   ) {
     return SuccessResponse.of(
       HttpStatus.OK, //
-      FindUserResponseDto.of(user),
+      UsersResponseDto.of(user),
     );
   }
 

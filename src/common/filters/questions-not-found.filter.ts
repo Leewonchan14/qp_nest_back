@@ -3,23 +3,25 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import FailResponse from 'src/common/api-response/fail.response';
 
-@Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter<HttpException> {
-  catch(exception: HttpException, host: ArgumentsHost) {
+export class QuestionsNotFoundException extends HttpException {
+  constructor(questionId: number) {
+    super(`Question NotFound by Id : ${questionId}`, HttpStatus.NOT_FOUND);
+  }
+}
+
+@Catch(QuestionsNotFoundException)
+export class UserNotFoundExceptionFilter
+  implements ExceptionFilter<QuestionsNotFoundException>
+{
+  catch(exception: QuestionsNotFoundException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
     const statusCode = exception.getStatus();
-
-    // response.status(statusCode).json({
-    //   statusCode,
-    //   message: exception.message,
-    //   timestamp: new Date().toISOString(),
-    //   path: request.url,
-    // });
 
     response.status(statusCode).json(
       FailResponse.of(

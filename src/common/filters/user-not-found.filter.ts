@@ -15,7 +15,7 @@ export class UserNotFoundException extends HttpException {
 
 @Catch(UserNotFoundException)
 export class UserNotFoundExceptionFilter
-  implements ExceptionFilter<HttpException>
+  implements ExceptionFilter<UserNotFoundException>
 {
   catch(exception: UserNotFoundException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

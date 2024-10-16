@@ -1,12 +1,17 @@
 import TimeStampEntity from 'src/common/entity/timestamp.entity';
+import Questions from 'src/questions/questions.entity';
+import Users from 'src/users/users.entity';
 import {
   Column,
+  Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+@Entity()
 export default class Answers extends TimeStampEntity {
   @PrimaryGeneratedColumn('increment')
   answerId: number;
@@ -17,24 +22,26 @@ export default class Answers extends TimeStampEntity {
   @Column({ default: true })
   isRootAnswer: boolean;
 
+  @Column({ default: false })
+  isUpdated: boolean;
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
   @ManyToOne(() => Answers, (answer) => answer.children, { nullable: true })
-  @JoinColumn({ name: 'answerId' })
-  parent: Answers;
+  @JoinColumn()
+  parent: Promise<Answers>;
 
   @OneToMany(() => Answers, (answer) => answer.parent, { cascade: true })
-  children: Answers[];
+  children: Promise<Answers[]>;
 
-  // @ManyToOne(fetch = FetchType.LAZY)
-  // @JoinColumn(name = "user_id")
-  // private User user;
+  @ManyToOne(() => Users, (users) => users.answers)
+  @JoinColumn()
+  user: Promise<Users>;
 
-  // @ManyToOne(fetch = FetchType.LAZY)
-  // @JoinColumn(name = "question_id")
-  // private Question question;
+  @ManyToOne(() => Questions, (quesition) => quesition.answers)
+  question: Promise<Questions>;
 
-  // @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL)
-  // private List<AnswerLikes> answerLikesList = new ArrayList<>();
-
-  // @OneToMany(fetch = FetchType.LAZY, mappedBy = "parent", cascade = CascadeType.ALL)
-  // private List<Answer> children = new ArrayList<>();
+  @ManyToMany(() => Users, (users) => users.likeAnswers)
+  likeUsers: Promise<Users[]>;
 }
