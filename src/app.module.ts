@@ -18,6 +18,7 @@ import { UsersModule } from './users/users.module';
       database: 'qp',
       entities: [__dirname + '/**/*.entity.{ts,js}'],
       logging: true,
+      timezone: 'Z',
       synchronize: true,
       // autoLoadEntities: true,
     }),
