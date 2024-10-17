@@ -9,6 +9,7 @@ export default class QuestionResponseDto {
   hit: number;
   isChild: boolean;
   isDeleted: boolean;
+  createdAt: Date;
 
   user: UsersResponseDto;
   hashTags: HashTagsResponseDto[];
@@ -21,6 +22,7 @@ export default class QuestionResponseDto {
     newResponse.hit = question.hit;
     newResponse.isChild = question.isChild;
     newResponse.isDeleted = question.isDeleted;
+    newResponse.createdAt = question.createdAt;
 
     newResponse.user = UsersResponseDto.of(await question.user);
     newResponse.hashTags = (await question.hashTags).map(
