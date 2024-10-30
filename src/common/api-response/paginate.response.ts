@@ -5,7 +5,12 @@ export default class PaginateResponse<T> {
     private readonly total: number,
   ) {}
 
-  static of<D>(data: D, lastPage: number, total: number) {
+  static of<D>(
+    data: D[],
+    likesCount: number[],
+    lastPage: number,
+    total: number,
+  ) {
     return new PaginateResponse(data, lastPage, total);
   }
 

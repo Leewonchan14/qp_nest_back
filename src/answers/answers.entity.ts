@@ -5,6 +5,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -43,5 +44,16 @@ export default class Answers extends TimeStampEntity {
   question: Promise<Questions>;
 
   @ManyToMany(() => Users, (users) => users.likeAnswers)
+  @JoinTable({
+    name: 'answers_likes',
+    joinColumn: {
+      name: 'answerId',
+      referencedColumnName: 'answerId',
+    },
+    inverseJoinColumn: {
+      name: 'userId',
+      referencedColumnName: 'userId',
+    },
+  })
   likeUsers: Promise<Users[]>;
 }

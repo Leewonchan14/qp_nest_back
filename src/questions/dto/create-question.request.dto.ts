@@ -12,19 +12,17 @@ import {
 const HASH_TAG_GROUP = 'hashtags';
 
 export default class CreateQuestionRequestDto {
-  userId: number;
-
   @IsArray({ groups: [HASH_TAG_GROUP] })
   @ArrayMaxSize(20, { groups: [HASH_TAG_GROUP] })
   @Length(1, 20, { each: true, groups: [HASH_TAG_GROUP] })
   hashTags: string[];
 
   @IsString()
-  @Length(1, 50)
+  @Length(1, 100)
   title: string;
 
   @IsString()
-  @Length(1, 500)
+  @Length(1, 1000)
   content: string;
 
   @ValidateIf((o: CreateQuestionRequestDto) => o.isChild)

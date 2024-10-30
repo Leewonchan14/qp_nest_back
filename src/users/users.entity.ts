@@ -6,7 +6,6 @@ import Questions from 'src/questions/questions.entity';
 import {
   Column,
   Entity,
-  JoinTable,
   ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -23,7 +22,7 @@ export default class Users extends TimeStampEntity {
   @Column({ type: 'text', nullable: true })
   profileImage: string;
 
-  @Column({ length: 50, nullable: false })
+  @Column({ length: 50, nullable: false, unique: true })
   email: string;
 
   @Column({ type: 'enum', enum: Gender, default: Gender.DEFAULT })
@@ -38,7 +37,7 @@ export default class Users extends TimeStampEntity {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 255, nullable: true })
   refreshToken: string;
 
   @OneToMany(() => Questions, (question) => question.user)
@@ -48,6 +47,5 @@ export default class Users extends TimeStampEntity {
   answers: Promise<Answers[]>;
 
   @ManyToMany(() => Answers, (answer) => answer.likeUsers)
-  @JoinTable()
   likeAnswers: Promise<Answers[]>;
 }

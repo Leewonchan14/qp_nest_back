@@ -1,18 +1,29 @@
 import Questions from '../questions.entity';
-import QuestionResponseDto from './question.response.dto';
 
 export default class AdjacentQuestionResponseDto {
-  preQuestion: QuestionResponseDto | null;
-  nextQuestion: QuestionResponseDto | null;
+  preQuestion: AdjacentQuestionDto | null;
+  nextQuestion: AdjacentQuestionDto | null;
 
-  static async of([pre, next]: [
+  static of([pre, next]: [
     Questions | null,
     Questions | null,
-  ]): Promise<AdjacentQuestionResponseDto> {
+  ]): AdjacentQuestionResponseDto {
     const newResponse = new AdjacentQuestionResponseDto();
-    newResponse.preQuestion = pre ? await QuestionResponseDto.of(pre) : null;
-    newResponse.nextQuestion = next ? await QuestionResponseDto.of(next) : null;
+    newResponse.preQuestion = pre ? AdjacentQuestionDto.of(pre) : null;
+    newResponse.nextQuestion = next ? AdjacentQuestionDto.of(next) : null;
 
+    return newResponse;
+  }
+}
+
+export class AdjacentQuestionDto {
+  questionId: number;
+  title: string;
+
+  static of(question: Questions): AdjacentQuestionDto {
+    const newResponse = new AdjacentQuestionDto();
+    newResponse.questionId = question.questionId;
+    newResponse.title = question.title;
     return newResponse;
   }
 }

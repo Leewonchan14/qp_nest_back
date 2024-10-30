@@ -11,6 +11,19 @@ export default class HashTagsService {
     private readonly hashTagsRepository: Repository<HashTags>,
   ) {}
 
+  async findByQuestion(questionId: number) {
+    return this.hashTagsRepository.find({
+      where: {
+        questions: {
+          questionId: questionId,
+        },
+      },
+      relations: {
+        questions: true,
+      },
+    });
+  }
+
   async create(hashTag: string) {
     let findHashTag: HashTags | null = await this.hashTagsRepository.findOneBy({
       hashTag,

@@ -14,8 +14,12 @@ export class ExistUserIdPipe implements PipeTransform<number, Promise<Users>> {
     userId: number, //
     // metadata: ArgumentMetadata,
   ) {
-    const findUser = await this.userRepository.findOneBy({ userId });
-    if (!findUser) {
+    const findUser = await this.userRepository.findOne({
+      where: {
+        userId: userId,
+      },
+    });
+    if (!findUser || isNaN(Number(userId))) {
       throw new UserNotFoundException(userId);
     }
     return findUser;

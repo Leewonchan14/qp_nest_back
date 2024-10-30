@@ -10,24 +10,46 @@ export default class AnswersResponseDto {
 
   isUpdated: boolean;
 
-  parentAnswerId: number | null;
+  createdAt: Date;
 
   user: UsersResponseDto;
   childrenCount: number;
   likeCount: number;
+  isLike: boolean;
 
-  static async of(answer: Answers) {
+  static async of(
+    answer: Answers,
+    likeCount?: number,
+    childrenCount?: number,
+    isLike?: boolean,
+  ) {
     const newResponse = new AnswersResponseDto();
     newResponse.answerId = answer.answerId;
     newResponse.content = answer.content;
     newResponse.isRootAnswer = answer.isRootAnswer;
+    newResponse.createdAt = answer.createdAt;
     newResponse.user = UsersResponseDto.of(await answer.user);
-    newResponse.childrenCount = (await answer.children).length;
-    newResponse.likeCount = (await answer.likeUsers).length;
-    newResponse.parentAnswerId = (await answer.parent)
-      ? (await answer.parent).answerId
-      : null;
-
+    newResponse.childrenCount = childrenCount ?? (await answer.children).length;
+    newResponse.likeCount = likeCount ?? (await answer.children).length;
+    newResponse.isLike = isLike ?? false;
     return newResponse;
+  }
+
+  static ofList(
+    answers: Answers[],
+    likesCounts: number[],
+    childrenCounts: number[],
+    isLikes: boolean[],
+  ) {
+    return Promise.all(
+      answers.map((answer, index) =>
+        AnswersResponseDto.of(
+          answer,
+          likesCounts[index],
+          childrenCounts[index],
+          isLikes[index],
+        ),
+      ),
+    );
   }
 }

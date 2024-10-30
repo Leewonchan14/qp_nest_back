@@ -1,9 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import AnswersService from 'src/answers/answers.service';
+import { Role } from 'src/common/enum/role';
 import HashTags from 'src/hashtag/hashtags.entity';
 import HashTagsService from 'src/hashtag/hashtags.service';
 import Users from 'src/users/users.entity';
-import { LessThan, Like, MoreThan, Repository } from 'typeorm';
+import {
+  Brackets,
+  LessThan,
+  MoreThan,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import CreateQuestionRequestDto from './dto/create-question.request.dto';
 import UpdateQuestionRequestDto from './dto/update-question.request.dto';
 import Questions from './questions.entity';
@@ -14,6 +22,7 @@ export default class QuestionsService {
     @InjectRepository(Questions)
     private readonly questionsRepository: Repository<Questions>, //
     private readonly hashTagsService: HashTagsService,
+    private readonly answersService: AnswersService,
   ) {}
 
   async create(
@@ -33,14 +42,27 @@ export default class QuestionsService {
     return this.questionsRepository.save(newQuestion);
   }
 
-  async findOne(question: Questions): Promise<Questions> {
+  async findOne(question: Questions) {
     await this.questionsRepository.update(question.questionId, {
       hit: question.hit + 1,
     });
 
+    const query = this.defaultQuery().andWhere(
+      'questions.questionId = :questionId',
+      {
+        questionId: question.questionId,
+      },
+    );
+
     question.hit = question.hit + 1;
 
-    return question;
+    const { answerCounts, expertCounts } = await this.findAnswerCounts(query);
+
+    return {
+      question,
+      answerCount: answerCounts[0],
+      expertCount: expertCounts[0],
+    };
   }
 
   async findAdjacent(
@@ -70,29 +92,45 @@ export default class QuestionsService {
   }
 
   async findAll(page: number, pageSize: number, search: string) {
-    const [questions, count] = await this.questionsRepository.findAndCount({
-      where: [
-        {
-          isDeleted: false,
-          title: Like(`%${search}%`),
-        },
-        {
-          isDeleted: false,
-          content: Like(`%${search}%`),
-        },
-      ],
-      relations: {
-        user: true,
-        hashTags: true,
-      },
-      order: {
-        createdAt: 'DESC',
-      },
-      take: pageSize,
-      skip: page * pageSize,
-    });
+    const query = this.defaultQuery()
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where(
+            'questions.title LIKE :title or questions.content LIKE :content',
+            {
+              title: `%${search}%`,
+              content: `%${search}%`,
+            },
+          );
+        }),
+      )
+      .orderBy({
+        'questions.createdAt': 'DESC',
+      });
 
-    return { questions, count };
+    const totalPromise = query.getCount();
+    const questionsPromise = query
+      .clone()
+      .offset(page * pageSize)
+      .limit(pageSize)
+      .getMany();
+
+    const countsPromise = this.findAnswerCounts(
+      query
+        .clone()
+        .offset(page * pageSize)
+        .limit(pageSize),
+    );
+
+    const [count, questions, { answerCounts, expertCounts }] =
+      await Promise.all([totalPromise, questionsPromise, countsPromise]);
+
+    return {
+      questions,
+      count,
+      answerCounts,
+      expertCounts,
+    };
   }
 
   async delete(question: Questions) {
@@ -105,19 +143,23 @@ export default class QuestionsService {
     return question;
   }
 
-  async update(
-    question: Questions,
-    updateDto: UpdateQuestionRequestDto,
-  ): Promise<Questions> {
+  async update(question: Questions, updateDto: UpdateQuestionRequestDto) {
     let hashTags: HashTags[] | undefined;
 
     if (updateDto.hashTags) {
       hashTags = await this.hashTagsService.createBulk(updateDto.hashTags);
     }
 
-    return await this.questionsRepository.save(
+    const updatedQuestion = await this.questionsRepository.save(
       UpdateQuestionRequestDto.assign(question, updateDto, hashTags), //
     );
+
+    const { answerCount, expertCount } =
+      await this.answersService.findAnswerCountAndExpertCountByQuestion(
+        question,
+      );
+
+    return { question: updatedQuestion, answerCount, expertCount };
   }
 
   async findByUser(
@@ -125,19 +167,89 @@ export default class QuestionsService {
     page: number,
     pageSize: number,
   ) {
-    const [questions, count] = await this.questionsRepository.findAndCount({
-      where: {
-        user: { userId: user.userId },
-      },
-      relations: {
-        user: true,
-        hashTags: true,
-      },
-      take: pageSize,
-      skip: page * pageSize,
-      order: { createdAt: 'DESC' },
+    const query = this.defaultQuery().andWhere('user.userId = :userId', {
+      userId: user.userId,
     });
 
-    return { questions, count };
+    const countPromise = query.getCount();
+    const questionsPromise = query
+      .offset(page * pageSize)
+      .limit(pageSize)
+      .getMany();
+    const countsPromise = this.findAnswerCounts(query);
+
+    const [count, questions, { expertCounts, answerCounts }] =
+      await Promise.all([countPromise, questionsPromise, countsPromise]);
+
+    // const { expertCounts, answerCounts } = ;
+
+    return {
+      questions,
+      count,
+      expertCounts,
+      answerCounts,
+    };
+  }
+
+  defaultQuery() {
+    return this.questionsRepository
+      .createQueryBuilder('questions')
+      .select('questions')
+      .leftJoinAndSelect(
+        'questions.user',
+        'user',
+        'user.isDeleted = :isDeleted',
+        { isDeleted: false },
+      )
+      .where('questions.isDeleted = :isDeleted', { isDeleted: false })
+      .groupBy('questions.questionId');
+  }
+
+  async findAnswerCounts(query: SelectQueryBuilder<Questions>) {
+    const countQuery = query
+      .clone()
+      .addSelect('questions.questionId', 'questionId')
+      .leftJoin(
+        'questions.answers',
+        'answers',
+        'answers.isDeleted = :isDeleted',
+        { isDeleted: false },
+      );
+
+    const { raw: aC } = await countQuery
+      .clone()
+      .leftJoin('answers.user', 'a_user', 'a_user.isDeleted = :isDeleted', {
+        isDeleted: false,
+      })
+      .addSelect('COUNT(answers.answerId)', 'answerCounts')
+      .getRawAndEntities<{ questionId: number; answerCounts: number }>();
+
+    countQuery
+      // .andWhere(
+      //   new Brackets((qb) =>
+      //     qb.where('a_user.role = :role', { role: Role.EXPERT }),
+      //   ),
+      // )
+      .leftJoin(
+        'answers.user',
+        'a_user',
+        'a_user.isDeleted = :isDeleted AND a_user.role = :role',
+        {
+          isDeleted: false,
+          role: Role.EXPERT,
+        },
+      )
+      .addSelect(`COUNT(DISTINCT a_user.userId)`, 'expertCounts');
+    // .addSelect(
+    //   `COUNT(CASE WHEN a_user.role = '${Role.EXPERT}' THEN answers.answerId END)`,
+    //   'expertCounts',
+    // );
+
+    const { raw: eC } = await countQuery.getRawAndEntities<{
+      questionId: number;
+      expertCounts: number;
+    }>();
+
+    return { answerCounts: aC, expertCounts: eC };
   }
 }
