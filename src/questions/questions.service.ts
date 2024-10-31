@@ -92,21 +92,27 @@ export default class QuestionsService {
   }
 
   async findAll(page: number, pageSize: number, search: string) {
+    console.log('findAll');
     const query = this.defaultQuery()
+      .leftJoin('questions.hashTags', 'hashTags')
       .andWhere(
         new Brackets((qb) => {
-          qb.where(
-            'questions.title LIKE :title or questions.content LIKE :content',
-            {
-              title: `%${search}%`,
+          qb.where('questions.title LIKE :title', {
+            title: `%${search}%`,
+          })
+            .orWhere('questions.content LIKE :content', {
               content: `%${search}%`,
-            },
-          );
+            })
+            .orWhere('hashTags.hashTag LIKE :hashTag', {
+              hashTag: `%${search}%`,
+            });
         }),
       )
       .orderBy({
         'questions.createdAt': 'DESC',
       });
+
+    console.log('query.getQuery(): ', query.getQuery());
 
     const totalPromise = query.getCount();
     const questionsPromise = query

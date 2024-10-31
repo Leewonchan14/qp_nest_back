@@ -88,7 +88,6 @@ export default class QuestionController {
     const { questions, count, answerCounts, expertCounts } =
       await this.questionsService.findAll(page, pageSize, search ?? '');
     // console.log('questions: ', questions);
-    console.log('expertCounts: ', expertCounts, questions.length);
     return SuccessResponse.of(
       HttpStatus.OK,
       PaginateResponse.toPaginate(
